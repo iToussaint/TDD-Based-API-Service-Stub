@@ -1,0 +1,18 @@
+[project]
+name = "tdd-based-api-service-stub"
+version = "0.1.0"
+description = "A mock Weather API service built with strict Test-Driven Development."
+authors = [
+    {name = "iToussaint",email = "iradukundatoussaint01@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+
+[tool.poetry]
+packages = [{include = "tdd_based_api_service_stub", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

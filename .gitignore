@@ -1,0 +1,36 @@
+# --- Python bytecode / caches ---
+__pycache__/
+*.py[cod]
+
+# --- Virtual environments & secrets ---
+.venv/
+venv/
+env/
+.env
+
+# --- Tool caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Coverage output (the text report in docs/ IS committed) ---
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# --- Build artefacts ---
+build/
+dist/
+*.egg-info/
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Personal learning notes (contain the full solution; not part of the submission) ---
+STEP-BY-STEP-GUIDE.md
+About-Project.md
+BUILD-PLAN.md
