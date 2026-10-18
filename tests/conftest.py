@@ -31,8 +31,8 @@ def mock_provider(
 
 
 @pytest.fixture
-def weather_service() -> WeatherService:
-    return WeatherService(provider=MockWeatherProvider(api_key=DEMO_API_KEY))
+def weather_service(mock_provider: NonCallableMagicMock) -> WeatherService:
+    return WeatherService(provider=mock_provider)
 
 
 @pytest.fixture
