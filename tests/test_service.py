@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 
 from tdd_based_api_service_stub.exceptions import (
@@ -7,6 +9,12 @@ from tdd_based_api_service_stub.exceptions import (
 )
 from tdd_based_api_service_stub.models import Forecast
 from tdd_based_api_service_stub.service import WeatherService
+
+SERVICE_LOGGER = "tdd_based_api_service_stub.service"
+
+
+def _find_record(caplog: pytest.LogCaptureFixture, event: str) -> logging.LogRecord:
+    return next(r for r in caplog.records if r.getMessage() == event)
 
 
 def test_get_forecast_returns_forecast_for_known_city(
@@ -71,3 +79,15 @@ def test_get_forecast_rejects_invalid_api_key(api_key: str) -> None:
 
     with pytest.raises(InvalidAPIKeyError):
         service.get_forecast("London")
+
+
+def test_get_forecast_logs_request(
+    weather_service: WeatherService, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger=SERVICE_LOGGER)
+
+    weather_service.get_forecast("London")
+
+    record = _find_record(caplog, "forecast.request")
+    assert record.levelno == logging.INFO
+    assert vars(record)["city"] == "London"
