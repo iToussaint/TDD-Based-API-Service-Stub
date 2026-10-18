@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
 
+from tdd_based_api_service_stub.exceptions import CityNotFoundError
 from tdd_based_api_service_stub.models import Forecast
 
 KNOWN_FORECASTS: Final[Mapping[str, Forecast]] = MappingProxyType(
@@ -41,5 +42,12 @@ class WeatherService:
 
         Returns:
             The forecast for the city.
+
+        Raises:
+            CityNotFoundError: If there is no data for the city.
         """
-        return KNOWN_FORECASTS[_normalise_city(city)]
+        normalised = _normalise_city(city)
+        try:
+            return KNOWN_FORECASTS[normalised]
+        except KeyError:
+            raise CityNotFoundError(f"City not found: {normalised!r}.") from None
