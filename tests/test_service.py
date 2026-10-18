@@ -1,4 +1,5 @@
 import logging
+from unittest.mock import NonCallableMagicMock
 
 import pytest
 
@@ -8,8 +9,10 @@ from tdd_based_api_service_stub.exceptions import (
     InvalidRequestError,
     WeatherServiceError,
 )
-from tdd_based_api_service_stub.models import Forecast
-from tdd_based_api_service_stub.service import DEMO_API_KEY, WeatherService
+from tdd_based_api_service_stub.models import Forecast, ForecastRequest
+from tdd_based_api_service_stub.providers.base import WeatherProvider
+from tdd_based_api_service_stub.providers.mock_provider import MockWeatherProvider
+from tdd_based_api_service_stub.service import WeatherService
 
 SERVICE_LOGGER = "tdd_based_api_service_stub.service"
 
@@ -18,68 +21,51 @@ def _find_record(caplog: pytest.LogCaptureFixture, event: str) -> logging.LogRec
     return next(r for r in caplog.records if r.getMessage() == event)
 
 
-def test_get_forecast_returns_forecast_for_known_city(
-    weather_service: WeatherService,
+# --- Delegation to the provider -------------------------------------------
+
+
+def test_get_forecast_returns_forecast_from_provider(
+    weather_service: WeatherService, sample_forecast: Forecast
 ) -> None:
-    forecast = weather_service.get_forecast("London")
-
-    assert isinstance(forecast, Forecast)
-    assert forecast.city == "London"
+    assert weather_service.get_forecast("London") == sample_forecast
 
 
-@pytest.mark.parametrize(
-    "expected",
-    [
-        Forecast("London", 15.0, "Cloudy", 72, 18.0),
-        Forecast("Paris", 18.0, "Sunny", 55, 10.0),
-        Forecast("Tokyo", 22.0, "Rainy", 80, 12.0),
-        Forecast("New York", 20.0, "Partly Cloudy", 60, 15.0),
-        Forecast("Kigali", 24.0, "Sunny", 65, 8.0),
-        Forecast("Accra", 30.0, "Humid", 85, 14.0),
-    ],
-    ids=lambda forecast: forecast.city,
-)
-def test_get_forecast_returns_predefined_data_for_known_cities(
-    weather_service: WeatherService, expected: Forecast
+def test_get_forecast_calls_provider_once_with_normalised_request(
+    weather_service: WeatherService, mock_provider: NonCallableMagicMock
 ) -> None:
-    assert weather_service.get_forecast(expected.city) == expected
+    weather_service.get_forecast("  london ")
+
+    mock_provider.fetch_forecast.assert_called_once_with(ForecastRequest(city="London"))
 
 
-@pytest.mark.parametrize(
-    ("raw_city", "expected_city"),
-    [
-        ("london", "London"),
-        ("  LONDON  ", "London"),
-        ("new   york", "New York"),
-    ],
-)
-def test_get_forecast_ignores_case_and_extra_whitespace(
-    weather_service: WeatherService, raw_city: str, expected_city: str
-) -> None:
-    assert weather_service.get_forecast(raw_city).city == expected_city
-
-
-def test_get_forecast_raises_city_not_found_for_unknown_city(
-    weather_service: WeatherService,
-) -> None:
-    with pytest.raises(CityNotFoundError, match="Atlantis"):
-        weather_service.get_forecast("Atlantis")
+# --- Error handling ---------------------------------------------------------
 
 
 @pytest.mark.parametrize("city", ["", "   ", None, 123])
-def test_get_forecast_rejects_invalid_city(
-    weather_service: WeatherService, city: object
+def test_get_forecast_rejects_invalid_city_without_calling_provider(
+    weather_service: WeatherService,
+    mock_provider: NonCallableMagicMock,
+    city: object,
 ) -> None:
     with pytest.raises(InvalidRequestError):
         weather_service.get_forecast(city)  # type: ignore[arg-type]
 
+    mock_provider.fetch_forecast.assert_not_called()
 
-@pytest.mark.parametrize("api_key", ["", "wrong-key"])
-def test_get_forecast_rejects_invalid_api_key(api_key: str) -> None:
-    service = WeatherService(api_key=api_key)
 
-    with pytest.raises(InvalidAPIKeyError):
-        service.get_forecast("London")
+@pytest.mark.parametrize("error", [CityNotFoundError("Atlantis"), InvalidAPIKeyError()])
+def test_get_forecast_propagates_provider_errors(
+    weather_service: WeatherService,
+    mock_provider: NonCallableMagicMock,
+    error: WeatherServiceError,
+) -> None:
+    mock_provider.fetch_forecast.side_effect = error
+
+    with pytest.raises(type(error)):
+        weather_service.get_forecast("Atlantis")
+
+
+# --- Structured logging ------------------------------------------------------
 
 
 def test_get_forecast_logs_request(
@@ -109,22 +95,61 @@ def test_get_forecast_logs_response(
 
 
 @pytest.mark.parametrize(
-    ("api_key", "city", "expected_type"),
+    ("error", "expected_type"),
     [
-        (DEMO_API_KEY, "Atlantis", "CityNotFoundError"),
-        ("wrong-key", "London", "InvalidAPIKeyError"),
-        (DEMO_API_KEY, "   ", "InvalidRequestError"),
+        (CityNotFoundError("Atlantis"), "CityNotFoundError"),
+        (InvalidAPIKeyError(), "InvalidAPIKeyError"),
     ],
 )
-def test_get_forecast_logs_errors_as_warnings(
-    caplog: pytest.LogCaptureFixture, api_key: str, city: str, expected_type: str
+def test_get_forecast_logs_provider_errors_as_warnings(
+    weather_service: WeatherService,
+    mock_provider: NonCallableMagicMock,
+    caplog: pytest.LogCaptureFixture,
+    error: WeatherServiceError,
+    expected_type: str,
 ) -> None:
     caplog.set_level(logging.INFO, logger=SERVICE_LOGGER)
-    service = WeatherService(api_key=api_key)
+    mock_provider.fetch_forecast.side_effect = error
 
     with pytest.raises(WeatherServiceError):
-        service.get_forecast(city)
+        weather_service.get_forecast("Atlantis")
 
     record = _find_record(caplog, "forecast.error")
     assert record.levelno == logging.WARNING
     assert vars(record)["error_type"] == expected_type
+
+
+def test_get_forecast_logs_invalid_request_as_warning(
+    weather_service: WeatherService, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger=SERVICE_LOGGER)
+
+    with pytest.raises(InvalidRequestError):
+        weather_service.get_forecast("   ")
+
+    record = _find_record(caplog, "forecast.error")
+    assert record.levelno == logging.WARNING
+    assert vars(record)["error_type"] == "InvalidRequestError"
+
+
+# --- Architecture (integration and swappability) -----------------------------
+
+
+def test_service_works_end_to_end_with_mock_provider(
+    mock_weather_provider: MockWeatherProvider,
+) -> None:
+    service = WeatherService(provider=mock_weather_provider)
+
+    forecast = service.get_forecast("  new   york ")
+
+    assert forecast == Forecast("New York", 20.0, "Partly Cloudy", 60, 15.0)
+
+
+def test_service_accepts_any_weather_provider_implementation() -> None:
+    class FakeProvider(WeatherProvider):
+        def fetch_forecast(self, request: ForecastRequest) -> Forecast:
+            return Forecast(request.city, -5.0, "Snowy", 90, 30.0)
+
+    service = WeatherService(provider=FakeProvider())
+
+    assert service.get_forecast("Oslo") == Forecast("Oslo", -5.0, "Snowy", 90, 30.0)

@@ -4,5 +4,6 @@ A mock Weather API service built with strict Test-Driven Development (TDD).
 
 ## Architecture
 
-`WeatherService` looks up forecasts for a fixed set of known cities and
-checks the API key itself.
+`WeatherService` depends on the abstract `WeatherProvider` interface.
+`MockWeatherProvider` implements it with predefined data, so a real
+HTTP-based provider can replace it without changing the service.
