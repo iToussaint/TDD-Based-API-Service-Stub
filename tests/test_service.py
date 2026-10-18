@@ -10,6 +10,7 @@ from tdd_based_api_service_stub.exceptions import (
     WeatherServiceError,
 )
 from tdd_based_api_service_stub.models import Forecast, ForecastRequest
+from tdd_based_api_service_stub.providers.base import WeatherProvider
 from tdd_based_api_service_stub.providers.mock_provider import MockWeatherProvider
 from tdd_based_api_service_stub.service import WeatherService
 
@@ -142,3 +143,13 @@ def test_service_works_end_to_end_with_mock_provider(
     forecast = service.get_forecast("  new   york ")
 
     assert forecast == Forecast("New York", 20.0, "Partly Cloudy", 60, 15.0)
+
+
+def test_service_accepts_any_weather_provider_implementation() -> None:
+    class FakeProvider(WeatherProvider):
+        def fetch_forecast(self, request: ForecastRequest) -> Forecast:
+            return Forecast(request.city, -5.0, "Snowy", 90, 30.0)
+
+    service = WeatherService(provider=FakeProvider())
+
+    assert service.get_forecast("Oslo") == Forecast("Oslo", -5.0, "Snowy", 90, 30.0)
