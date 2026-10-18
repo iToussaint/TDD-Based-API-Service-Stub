@@ -52,6 +52,18 @@ def test_get_forecast_rejects_invalid_city_without_calling_provider(
     mock_provider.fetch_forecast.assert_not_called()
 
 
+@pytest.mark.parametrize("error", [CityNotFoundError("Atlantis"), InvalidAPIKeyError()])
+def test_get_forecast_propagates_provider_errors(
+    weather_service: WeatherService,
+    mock_provider: NonCallableMagicMock,
+    error: WeatherServiceError,
+) -> None:
+    mock_provider.fetch_forecast.side_effect = error
+
+    with pytest.raises(type(error)):
+        weather_service.get_forecast("Atlantis")
+
+
 # --- Structured logging ------------------------------------------------------
 
 
