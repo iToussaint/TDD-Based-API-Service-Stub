@@ -53,6 +53,9 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP", "N", "SIM", "D", "PL", "RUF"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["tdd_based_api_service_stub"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 

@@ -1,5 +1,10 @@
 import pytest
 
+from tdd_based_api_service_stub.exceptions import (
+    CityNotFoundError,
+    InvalidAPIKeyError,
+    InvalidRequestError,
+)
 from tdd_based_api_service_stub.models import Forecast
 from tdd_based_api_service_stub.service import WeatherService
 
@@ -43,3 +48,26 @@ def test_get_forecast_ignores_case_and_extra_whitespace(
     weather_service: WeatherService, raw_city: str, expected_city: str
 ) -> None:
     assert weather_service.get_forecast(raw_city).city == expected_city
+
+
+def test_get_forecast_raises_city_not_found_for_unknown_city(
+    weather_service: WeatherService,
+) -> None:
+    with pytest.raises(CityNotFoundError, match="Atlantis"):
+        weather_service.get_forecast("Atlantis")
+
+
+@pytest.mark.parametrize("city", ["", "   ", None, 123])
+def test_get_forecast_rejects_invalid_city(
+    weather_service: WeatherService, city: object
+) -> None:
+    with pytest.raises(InvalidRequestError):
+        weather_service.get_forecast(city)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("api_key", ["", "wrong-key"])
+def test_get_forecast_rejects_invalid_api_key(api_key: str) -> None:
+    service = WeatherService(api_key=api_key)
+
+    with pytest.raises(InvalidAPIKeyError):
+        service.get_forecast("London")
