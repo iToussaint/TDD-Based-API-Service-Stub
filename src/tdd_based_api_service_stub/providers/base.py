@@ -21,4 +21,8 @@ class WeatherProvider(ABC):
 
         Returns:
             The forecast for ``request.city``.
+
+        Raises:
+            InvalidAPIKeyError: If the provider rejects the API key.
+            CityNotFoundError: If the provider has no data for the city.
         """
