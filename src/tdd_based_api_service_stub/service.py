@@ -18,6 +18,18 @@ KNOWN_FORECASTS: Final[Mapping[str, Forecast]] = MappingProxyType(
 )
 
 
+def _normalise_city(city: str) -> str:
+    """Remove extra whitespace and title-case a city name.
+
+    Args:
+        city: The raw city name, e.g. ``"  new   york "``.
+
+    Returns:
+        The normalised name, e.g. ``"New York"``.
+    """
+    return " ".join(city.split()).title()
+
+
 class WeatherService:
     """Provide weather forecasts for a predefined set of cities."""
 
@@ -25,9 +37,9 @@ class WeatherService:
         """Return the forecast for a city.
 
         Args:
-            city: The city name.
+            city: The city name. Case and extra whitespace are ignored.
 
         Returns:
             The forecast for the city.
         """
-        return KNOWN_FORECASTS[" ".join(city.split()).title()]
+        return KNOWN_FORECASTS[_normalise_city(city)]
