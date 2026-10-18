@@ -1,0 +1,12 @@
+Name                                                        Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------------------
+src\tdd_based_api_service_stub\__init__.py                      0      0      0      0   100%
+src\tdd_based_api_service_stub\exceptions.py                    9      0      0      0   100%
+src\tdd_based_api_service_stub\logging_config.py               18      0      2      0   100%
+src\tdd_based_api_service_stub\models.py                       13      0      4      0   100%
+src\tdd_based_api_service_stub\providers\__init__.py            0      0      0      0   100%
+src\tdd_based_api_service_stub\providers\base.py                5      0      0      0   100%
+src\tdd_based_api_service_stub\providers\mock_provider.py      19      0      2      0   100%
+src\tdd_based_api_service_stub\service.py                      18      0      0      0   100%
+-------------------------------------------------------------------------------------------------------
+TOTAL                                                          82      0      8      0   100%
