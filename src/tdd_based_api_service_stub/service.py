@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
 
-from tdd_based_api_service_stub.exceptions import CityNotFoundError
+from tdd_based_api_service_stub.exceptions import CityNotFoundError, InvalidRequestError
 from tdd_based_api_service_stub.models import Forecast
 
 KNOWN_FORECASTS: Final[Mapping[str, Forecast]] = MappingProxyType(
@@ -44,8 +44,11 @@ class WeatherService:
             The forecast for the city.
 
         Raises:
+            InvalidRequestError: If ``city`` is not a non-empty string.
             CityNotFoundError: If there is no data for the city.
         """
+        if not isinstance(city, str) or not city.strip():
+            raise InvalidRequestError("City must be a non-empty string.")
         normalised = _normalise_city(city)
         try:
             return KNOWN_FORECASTS[normalised]

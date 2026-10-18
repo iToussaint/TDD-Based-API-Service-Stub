@@ -3,3 +3,7 @@
 
 class CityNotFoundError(Exception):
     """Raised when no forecast exists for the requested city."""
+
+
+class InvalidRequestError(Exception):
+    """Raised when the request parameters are invalid (e.g. an empty city)."""
