@@ -6,6 +6,11 @@ from typing import Final
 
 PACKAGE_LOGGER_NAME: Final = "tdd_based_api_service_stub"
 
+_STANDARD_RECORD_ATTRS: Final = frozenset(vars(logging.makeLogRecord({}))) | {
+    "message",
+    "asctime",
+}
+
 
 class JsonFormatter(logging.Formatter):
     """Format log records as single-line JSON objects.
@@ -23,16 +28,17 @@ class JsonFormatter(logging.Formatter):
         Returns:
             The record as a JSON string.
         """
-        standard_attrs = set(vars(logging.makeLogRecord({}))) | {"message", "asctime"}
         payload: dict[str, object] = {
             "timestamp": self.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
             "level": record.levelname,
             "logger": record.name,
             "event": record.getMessage(),
         }
-        for key, value in vars(record).items():
-            if key not in standard_attrs:
-                payload[key] = value
+        payload.update(
+            (key, value)
+            for key, value in vars(record).items()
+            if key not in _STANDARD_RECORD_ATTRS
+        )
         return json.dumps(payload, default=str)
 
 
