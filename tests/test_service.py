@@ -10,7 +10,11 @@ from tdd_based_api_service_stub.exceptions import (
     WeatherServiceError,
 )
 from tdd_based_api_service_stub.models import Forecast, ForecastRequest
-from tdd_based_api_service_stub.service import DEMO_API_KEY, WeatherService
+from tdd_based_api_service_stub.providers.mock_provider import (
+    DEMO_API_KEY,
+    MockWeatherProvider,
+)
+from tdd_based_api_service_stub.service import WeatherService
 
 SERVICE_LOGGER = "tdd_based_api_service_stub.service"
 
@@ -77,7 +81,7 @@ def test_get_forecast_rejects_invalid_city(
 
 @pytest.mark.parametrize("api_key", ["", "wrong-key"])
 def test_get_forecast_rejects_invalid_api_key(api_key: str) -> None:
-    service = WeatherService(api_key=api_key)
+    service = WeatherService(provider=MockWeatherProvider(api_key=api_key))
 
     with pytest.raises(InvalidAPIKeyError):
         service.get_forecast("London")
@@ -121,7 +125,7 @@ def test_get_forecast_logs_errors_as_warnings(
     caplog: pytest.LogCaptureFixture, api_key: str, city: str, expected_type: str
 ) -> None:
     caplog.set_level(logging.INFO, logger=SERVICE_LOGGER)
-    service = WeatherService(api_key=api_key)
+    service = WeatherService(provider=MockWeatherProvider(api_key=api_key))
 
     with pytest.raises(WeatherServiceError):
         service.get_forecast(city)

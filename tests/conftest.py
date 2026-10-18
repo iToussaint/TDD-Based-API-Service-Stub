@@ -7,8 +7,11 @@ from pytest_mock import MockerFixture
 
 from tdd_based_api_service_stub.models import Forecast
 from tdd_based_api_service_stub.providers.base import WeatherProvider
-from tdd_based_api_service_stub.providers.mock_provider import MockWeatherProvider
-from tdd_based_api_service_stub.service import DEMO_API_KEY, WeatherService
+from tdd_based_api_service_stub.providers.mock_provider import (
+    DEMO_API_KEY,
+    MockWeatherProvider,
+)
+from tdd_based_api_service_stub.service import WeatherService
 
 
 @pytest.fixture
@@ -29,7 +32,7 @@ def mock_provider(
 
 @pytest.fixture
 def weather_service() -> WeatherService:
-    return WeatherService(api_key=DEMO_API_KEY)
+    return WeatherService(provider=MockWeatherProvider(api_key=DEMO_API_KEY))
 
 
 @pytest.fixture
