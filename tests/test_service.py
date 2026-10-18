@@ -4,10 +4,10 @@ from tdd_based_api_service_stub.models import Forecast
 from tdd_based_api_service_stub.service import WeatherService
 
 
-def test_get_forecast_returns_forecast_for_known_city() -> None:
-    service = WeatherService()
-
-    forecast = service.get_forecast("London")
+def test_get_forecast_returns_forecast_for_known_city(
+    weather_service: WeatherService,
+) -> None:
+    forecast = weather_service.get_forecast("London")
 
     assert isinstance(forecast, Forecast)
     assert forecast.city == "London"
@@ -26,8 +26,6 @@ def test_get_forecast_returns_forecast_for_known_city() -> None:
     ids=lambda forecast: forecast.city,
 )
 def test_get_forecast_returns_predefined_data_for_known_cities(
-    expected: Forecast,
+    weather_service: WeatherService, expected: Forecast
 ) -> None:
-    service = WeatherService()
-
-    assert service.get_forecast(expected.city) == expected
+    assert weather_service.get_forecast(expected.city) == expected
