@@ -1,6 +1,6 @@
 import pytest
 
-from tdd_based_api_service_stub.exceptions import CityNotFoundError
+from tdd_based_api_service_stub.exceptions import CityNotFoundError, InvalidRequestError
 from tdd_based_api_service_stub.models import Forecast
 from tdd_based_api_service_stub.service import WeatherService
 
@@ -51,3 +51,11 @@ def test_get_forecast_raises_city_not_found_for_unknown_city(
 ) -> None:
     with pytest.raises(CityNotFoundError, match="Atlantis"):
         weather_service.get_forecast("Atlantis")
+
+
+@pytest.mark.parametrize("city", ["", "   ", None, 123])
+def test_get_forecast_rejects_invalid_city(
+    weather_service: WeatherService, city: object
+) -> None:
+    with pytest.raises(InvalidRequestError):
+        weather_service.get_forecast(city)  # type: ignore[arg-type]
