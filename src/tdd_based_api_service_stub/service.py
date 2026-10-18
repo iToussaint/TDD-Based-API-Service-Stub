@@ -48,9 +48,9 @@ class WeatherService:
             CityNotFoundError: If there is no data for the city.
         """
         if self._api_key not in VALID_API_KEYS:
-            raise InvalidAPIKeyError("The provided API key is invalid.")
+            raise InvalidAPIKeyError()
         request = ForecastRequest(city=city)
         try:
             return KNOWN_FORECASTS[request.city]
         except KeyError:
-            raise CityNotFoundError(f"City not found: {request.city!r}.") from None
+            raise CityNotFoundError(request.city) from None
