@@ -30,4 +30,4 @@ class WeatherService:
         Returns:
             The forecast for the city.
         """
-        return KNOWN_FORECASTS[city]
+        return KNOWN_FORECASTS[" ".join(city.split()).title()]
