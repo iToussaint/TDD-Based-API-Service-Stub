@@ -4,8 +4,8 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
 
-from tdd_based_api_service_stub.exceptions import CityNotFoundError, InvalidRequestError
-from tdd_based_api_service_stub.models import Forecast
+from tdd_based_api_service_stub.exceptions import CityNotFoundError
+from tdd_based_api_service_stub.models import Forecast, ForecastRequest
 
 KNOWN_FORECASTS: Final[Mapping[str, Forecast]] = MappingProxyType(
     {
@@ -17,18 +17,6 @@ KNOWN_FORECASTS: Final[Mapping[str, Forecast]] = MappingProxyType(
         "Accra": Forecast("Accra", 30.0, "Humid", 85, 14.0),
     }
 )
-
-
-def _normalise_city(city: str) -> str:
-    """Remove extra whitespace and title-case a city name.
-
-    Args:
-        city: The raw city name, e.g. ``"  new   york "``.
-
-    Returns:
-        The normalised name, e.g. ``"New York"``.
-    """
-    return " ".join(city.split()).title()
 
 
 class WeatherService:
@@ -47,10 +35,8 @@ class WeatherService:
             InvalidRequestError: If ``city`` is not a non-empty string.
             CityNotFoundError: If there is no data for the city.
         """
-        if not isinstance(city, str) or not city.strip():
-            raise InvalidRequestError("City must be a non-empty string.")
-        normalised = _normalise_city(city)
+        request = ForecastRequest(city=city)
         try:
-            return KNOWN_FORECASTS[normalised]
+            return KNOWN_FORECASTS[request.city]
         except KeyError:
-            raise CityNotFoundError(f"City not found: {normalised!r}.") from None
+            raise CityNotFoundError(f"City not found: {request.city!r}.") from None
