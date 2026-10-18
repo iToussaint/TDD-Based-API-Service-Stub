@@ -56,13 +56,7 @@ class WeatherService:
         """
         logger.info("forecast.request", extra={"city": city})
         try:
-            if self._api_key not in VALID_API_KEYS:
-                raise InvalidAPIKeyError()
-            request = ForecastRequest(city=city)
-            try:
-                forecast = KNOWN_FORECASTS[request.city]
-            except KeyError:
-                raise CityNotFoundError(request.city) from None
+            forecast = self._fetch(city)
         except WeatherServiceError as exc:
             logger.warning(
                 "forecast.error",
@@ -78,3 +72,20 @@ class WeatherService:
             },
         )
         return forecast
+
+    def _fetch(self, city: str) -> Forecast:
+        """Check the API key, validate the city and look up its forecast.
+
+        Args:
+            city: The raw city name.
+
+        Returns:
+            The forecast for the city.
+        """
+        if self._api_key not in VALID_API_KEYS:
+            raise InvalidAPIKeyError()
+        request = ForecastRequest(city=city)
+        try:
+            return KNOWN_FORECASTS[request.city]
+        except KeyError:
+            raise CityNotFoundError(request.city) from None
