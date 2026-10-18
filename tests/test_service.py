@@ -91,3 +91,17 @@ def test_get_forecast_logs_request(
     record = _find_record(caplog, "forecast.request")
     assert record.levelno == logging.INFO
     assert vars(record)["city"] == "London"
+
+
+def test_get_forecast_logs_response(
+    weather_service: WeatherService, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger=SERVICE_LOGGER)
+
+    weather_service.get_forecast("London")
+
+    record = _find_record(caplog, "forecast.response")
+    assert record.levelno == logging.INFO
+    assert vars(record)["city"] == "London"
+    assert vars(record)["temperature_celsius"] == 15.0
+    assert vars(record)["condition"] == "Cloudy"
