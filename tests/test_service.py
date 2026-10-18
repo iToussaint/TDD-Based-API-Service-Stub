@@ -1,6 +1,10 @@
 import pytest
 
-from tdd_based_api_service_stub.exceptions import CityNotFoundError, InvalidRequestError
+from tdd_based_api_service_stub.exceptions import (
+    CityNotFoundError,
+    InvalidAPIKeyError,
+    InvalidRequestError,
+)
 from tdd_based_api_service_stub.models import Forecast
 from tdd_based_api_service_stub.service import WeatherService
 
@@ -59,3 +63,11 @@ def test_get_forecast_rejects_invalid_city(
 ) -> None:
     with pytest.raises(InvalidRequestError):
         weather_service.get_forecast(city)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("api_key", ["", "wrong-key"])
+def test_get_forecast_rejects_invalid_api_key(api_key: str) -> None:
+    service = WeatherService(api_key=api_key)
+
+    with pytest.raises(InvalidAPIKeyError):
+        service.get_forecast("London")
