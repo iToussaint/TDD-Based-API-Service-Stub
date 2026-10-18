@@ -6,9 +6,10 @@ from tdd_based_api_service_stub.exceptions import (
     CityNotFoundError,
     InvalidAPIKeyError,
     InvalidRequestError,
+    WeatherServiceError,
 )
 from tdd_based_api_service_stub.models import Forecast
-from tdd_based_api_service_stub.service import WeatherService
+from tdd_based_api_service_stub.service import DEMO_API_KEY, WeatherService
 
 SERVICE_LOGGER = "tdd_based_api_service_stub.service"
 
@@ -105,3 +106,25 @@ def test_get_forecast_logs_response(
     assert vars(record)["city"] == "London"
     assert vars(record)["temperature_celsius"] == 15.0
     assert vars(record)["condition"] == "Cloudy"
+
+
+@pytest.mark.parametrize(
+    ("api_key", "city", "expected_type"),
+    [
+        (DEMO_API_KEY, "Atlantis", "CityNotFoundError"),
+        ("wrong-key", "London", "InvalidAPIKeyError"),
+        (DEMO_API_KEY, "   ", "InvalidRequestError"),
+    ],
+)
+def test_get_forecast_logs_errors_as_warnings(
+    caplog: pytest.LogCaptureFixture, api_key: str, city: str, expected_type: str
+) -> None:
+    caplog.set_level(logging.INFO, logger=SERVICE_LOGGER)
+    service = WeatherService(api_key=api_key)
+
+    with pytest.raises(WeatherServiceError):
+        service.get_forecast(city)
+
+    record = _find_record(caplog, "forecast.error")
+    assert record.levelno == logging.WARNING
+    assert vars(record)["error_type"] == expected_type
