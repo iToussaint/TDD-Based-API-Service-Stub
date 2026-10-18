@@ -1,11 +1,14 @@
 """The weather service: the public entry point for forecasts."""
 
+import logging
 from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Final
 
 from tdd_based_api_service_stub.exceptions import CityNotFoundError, InvalidAPIKeyError
 from tdd_based_api_service_stub.models import Forecast, ForecastRequest
+
+logger = logging.getLogger(__name__)
 
 DEMO_API_KEY: Final = "demo-key-123"
 VALID_API_KEYS: Final = frozenset({DEMO_API_KEY})
@@ -47,6 +50,7 @@ class WeatherService:
             InvalidRequestError: If ``city`` is not a non-empty string.
             CityNotFoundError: If there is no data for the city.
         """
+        logger.info("forecast.request", extra={"city": city})
         if self._api_key not in VALID_API_KEYS:
             raise InvalidAPIKeyError()
         request = ForecastRequest(city=city)
