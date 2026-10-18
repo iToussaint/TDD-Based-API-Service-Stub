@@ -55,6 +55,15 @@ class WeatherService:
             raise InvalidAPIKeyError()
         request = ForecastRequest(city=city)
         try:
-            return KNOWN_FORECASTS[request.city]
+            forecast = KNOWN_FORECASTS[request.city]
         except KeyError:
             raise CityNotFoundError(request.city) from None
+        logger.info(
+            "forecast.response",
+            extra={
+                "city": forecast.city,
+                "temperature_celsius": forecast.temperature_celsius,
+                "condition": forecast.condition,
+            },
+        )
+        return forecast
