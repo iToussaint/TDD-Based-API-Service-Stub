@@ -29,3 +29,17 @@ def test_get_forecast_returns_predefined_data_for_known_cities(
     weather_service: WeatherService, expected: Forecast
 ) -> None:
     assert weather_service.get_forecast(expected.city) == expected
+
+
+@pytest.mark.parametrize(
+    ("raw_city", "expected_city"),
+    [
+        ("london", "London"),
+        ("  LONDON  ", "London"),
+        ("new   york", "New York"),
+    ],
+)
+def test_get_forecast_ignores_case_and_extra_whitespace(
+    weather_service: WeatherService, raw_city: str, expected_city: str
+) -> None:
+    assert weather_service.get_forecast(raw_city).city == expected_city
