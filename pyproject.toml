@@ -16,3 +16,51 @@ packages = [{include = "tdd_based_api_service_stub", from = "src"}]
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-mock (>=3.17.0,<4.0.0)",
+    "coverage (>=7.16.2,<8.0.0)",
+    "black (>=26.10.1,<27.0.0)",
+    "ruff (>=0.17.1,<0.18.0)",
+    "mypy (>=2.4.0,<3.0.0)",
+    "pre-commit (>=4.7.0,<5.0.0)"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers --strict-config"
+
+[tool.coverage.run]
+source = ["tdd_based_api_service_stub"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 100
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "N", "SIM", "D", "PL", "RUF"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "PLR2004"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src", "tests"]
+mypy_path = "src"
