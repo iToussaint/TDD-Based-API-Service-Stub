@@ -1,4 +1,5 @@
 import logging
+from unittest.mock import NonCallableMagicMock
 
 import pytest
 
@@ -8,7 +9,7 @@ from tdd_based_api_service_stub.exceptions import (
     InvalidRequestError,
     WeatherServiceError,
 )
-from tdd_based_api_service_stub.models import Forecast
+from tdd_based_api_service_stub.models import Forecast, ForecastRequest
 from tdd_based_api_service_stub.service import DEMO_API_KEY, WeatherService
 
 SERVICE_LOGGER = "tdd_based_api_service_stub.service"
@@ -128,3 +129,21 @@ def test_get_forecast_logs_errors_as_warnings(
     record = _find_record(caplog, "forecast.error")
     assert record.levelno == logging.WARNING
     assert vars(record)["error_type"] == expected_type
+
+
+def test_get_forecast_returns_forecast_from_provider(
+    mock_provider: NonCallableMagicMock, sample_forecast: Forecast
+) -> None:
+    service = WeatherService(provider=mock_provider)
+
+    assert service.get_forecast("London") == sample_forecast
+
+
+def test_get_forecast_calls_provider_once_with_normalised_request(
+    mock_provider: NonCallableMagicMock,
+) -> None:
+    service = WeatherService(provider=mock_provider)
+
+    service.get_forecast("  london ")
+
+    mock_provider.fetch_forecast.assert_called_once_with(ForecastRequest(city="London"))
